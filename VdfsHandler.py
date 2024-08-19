@@ -479,7 +479,10 @@ def parse_args() -> dict:
 
 def main() -> None:
     args = parse_args()
-    if args["archive_path"][-4:] != ".vdf" or not Path(args["archive_path"]).exists():
+    if (
+        args["archive_path"][-4:] not in [".vdf", ".mod"]
+        or not Path(args["archive_path"]).exists()
+    ):
         print_colored(
             "red", f"Aborting: {args['archive_path']} is not a valid VDF archive."
         )
