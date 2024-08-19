@@ -1,6 +1,6 @@
 # VdfsHandler
 
-VdfsHandler is a CLI utility wriiten in Python for managing VDF (Virtual Disk Files) archives, primarily used in the Gothic game series. It allows you to view, extract, add, and remove files from VDF archives, as well as create new archives.
+VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Files) archives, primarily used in the Gothic game series. It allows you to view, extract, add, and remove files from VDF archives, as well as create new archives.
 
 ## Features
 
