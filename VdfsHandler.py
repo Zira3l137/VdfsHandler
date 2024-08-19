@@ -5,6 +5,8 @@ from pathlib import Path
 
 from zenkit import GameVersion, LogLevel, Vfs, VfsNode, set_logger_default
 
+from printColored import print_colored, print_mixed
+
 DESKTOP = Path.home() / "Desktop"
 
 
@@ -122,7 +124,14 @@ class VdfsHandler:
             child_name = (
                 f"[{child.name.title()}]" if child.is_dir() else child.name.title()
             )
-            print(f"{current_indent}{child_name}")
+            if not child.is_dir():
+                print_mixed(
+                    "green", text=f"{current_indent}", colored_text=f"{child_name}"
+                )
+            else:
+                print_mixed(
+                    "yellow", text=f"{current_indent}", colored_text=f"{child_name}"
+                )
             if child.is_dir():
                 extension = "    " if is_last else "│   "
                 self._print_recursive(child, indent + extension)
@@ -470,7 +479,9 @@ def parse_args() -> dict:
 def main() -> None:
     args = parse_args()
     if args["archive_path"][-4:] != ".vdf" or not Path(args["archive_path"]).exists():
-        print(f"Aborting: {args['archive_path']} is not a valid VDF archive.")
+        print_colored(
+            "red", f"Aborting: {args['archive_path']} is not a valid VDF archive."
+        )
         exit()
     vfs = VdfsHandler(args["archive_path"])
 
@@ -480,7 +491,7 @@ def main() -> None:
         if vfs.is_existing_file:
             vfs.print_vfs()
         else:
-            print(f"Aborting: {vfs.archive_name} is empty.")
+            print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
     if args["debug"]:
         vfs._toggle_debugging(args["debug"], False)
     if args["full_debug"]:
@@ -490,7 +501,7 @@ def main() -> None:
         if vfs.is_existing_file:
             vfs.export_all(args["output_path"])
             exit()
-        print(f"Aborting: {vfs.archive_name} is empty.")
+        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
         exit()
     elif args["extract"]:
         if vfs.is_existing_file:
@@ -502,13 +513,13 @@ def main() -> None:
             wildcard = node.split("*")[1]
             vfs.export_file(wildcard, path, all_with_name=True)
             exit()
-        print(f"Aborting: {vfs.archive_name} is empty.")
+        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
         exit()
     elif args["add"]:
         input_path, vdf_path = args["add"]
         output_path = args["output_path"]
         if True not in [input_path, vdf_path]:
-            print("Aborting: No input file for insertion was provided.")
+            print_colored("red", "Aborting: No input file for insertion was provided.")
             exit()
         if not "*" in input_path:
             vfs.insert_file(vdf_path, input_path)
@@ -523,7 +534,7 @@ def main() -> None:
                 vfs.save_vdf(output_path)
                 exit()
             else:
-                print(f"Aborting: {parent_directory} was not found.")
+                print_colored("red", f"Aborting: {parent_directory} was not found.")
                 exit()
         else:
             for file in Path().iterdir():
@@ -543,7 +554,7 @@ def main() -> None:
             vfs.remove_file(wildcard, all_with_name=True)
             vfs.save_vdf(output_path)
             exit()
-        print(f"Aborting: {vfs.archive_name} is empty.")
+        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
         exit()
 
     exit()
