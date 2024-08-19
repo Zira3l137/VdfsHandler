@@ -469,6 +469,9 @@ def parse_args() -> dict:
 
 def main() -> None:
     args = parse_args()
+    if args["archive_path"][-4:] != ".vdf" or not Path(args["archive_path"]).exists():
+        print(f"Aborting: {args['archive_path']} is not a valid VDF archive.")
+        exit()
     vfs = VdfsHandler(args["archive_path"])
 
     if args["gothic1"]:
