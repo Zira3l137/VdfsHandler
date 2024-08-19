@@ -5,9 +5,10 @@ from pathlib import Path
 
 from zenkit import GameVersion, LogLevel, Vfs, VfsNode, set_logger_default
 
-from printColored import print_colored, print_mixed
+from printColored import (enable_ansi_escape_sequences, print_colored,
+                          print_mixed)
 
-DESKTOP = Path.home() / "Desktop"
+enable_ansi_escape_sequences()
 
 
 class NodeNotFound(Exception):
