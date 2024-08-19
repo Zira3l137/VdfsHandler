@@ -20,7 +20,7 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 1. Clone the repository:
     ```sh
     git clone https://github.com/Zira3l137/VdfsHandler
-    cd vdfs-handler
+    cd vdfshandler
     ```
 
 2. Install the required dependencies:
