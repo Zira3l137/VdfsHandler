@@ -1,0 +1,6 @@
+Lib/
+Scripts/
+__pycache__/
+pyvenv.cfg
+share/
+*.bat
