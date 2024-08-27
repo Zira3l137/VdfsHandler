@@ -10,6 +10,9 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 - **Remove files**: Delete specific files or directories from the VDF archive.
 - **Save changes**: Save the modified VDF archive to a specified location.
 
+![image](https://github.com/user-attachments/assets/7a3c4276-d9a5-4815-a26c-9e0ec8308f30)
+
+
 ## Requirements
 
 - Python 3.7 or higher
