@@ -480,8 +480,9 @@ def parse_args() -> dict:
 def main() -> None:
     args = parse_args()
     if (
-        args["archive_path"][-4:] not in [".vdf", ".mod"]
-        or not Path(args["archive_path"]).exists()
+        args["archive_path"][-4:]
+        not in [".vdf", ".mod"]
+        # or not Path(args["archive_path"]).exists()
     ):
         print_colored(
             "red", f"Aborting: {args['archive_path']} is not a valid VDF archive."
@@ -520,9 +521,13 @@ def main() -> None:
         print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
         exit()
     elif args["add"]:
-        input_path, vdf_path = args["add"]
+        if len(args["add"]) == 2:
+            input_path, vdf_path = args["add"]
+        else:
+            input_path = "".join(args["add"])
+            vdf_path = None
         output_path = args["output_path"]
-        if True not in [input_path, vdf_path]:
+        if not input_path:
             print_colored("red", "Aborting: No input file for insertion was provided.")
             exit()
         if not "*" in input_path:
