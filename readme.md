@@ -45,6 +45,7 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 - `-v, --view_vfs_tree`: Print out the VDF tree structure.
 - `-d, --debug`: Enable debug mode.
 - `-f, --full_debug`: Enable full debug mode for ZenKit.
+- `-t, --time`: Assign a custom creation date for the archive. Format: `%d.%m.%Y% H%:M%:S`
 
 ### Examples
 
