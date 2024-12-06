@@ -392,104 +392,63 @@ class VdfsHandler:
 
 
 def parse_args() -> Namespace:
-    parser = ArgumentParser()
-    # Game version switch
+    """Parses command-line arguments using argparse."""
+    parser = ArgumentParser(description="VDF Archive Manager")
+    parser.add_argument("archive_path", type=Path, help="Path to the VDF archive")
     parser.add_argument(
-        "-g1",
-        "--gothic1",
-        action="store_true",
-        help="Set game version for packed VDF archives to Gothic 1",
-        required=False,
+        "-g",
+        "--game-version",
+        choices=["g1", "g2"],
+        default="g2",
+        help="Game version (g1 or g2, default: g2)",
     )
-    # Timestamp for the output VDF
     parser.add_argument(
         "-t",
-        "--time",
-        type=str,
-        help="Add timestamp to the output VDF archive %d.%m.%Y% H%:M%:S",
-        required=False,
+        "--timestamp",
+        type=lambda s: datetime.strptime(s, "%d.%m.%Y %H:%M:%S").timestamp(),
+        help="Timestamp for output VDF (format: DD.MM.YYYY HH:MM:SS)",
     )
-    # Input directory for unpacking
-    parser.add_argument("archive_path", type=str, help="Path to the VDF archive")
-    # Output directory for unpacking
     parser.add_argument(
         "-o",
-        "--output_path",
-        type=str,
-        help=(
-            "If provided, the VDF archive will be unpacked into"
-            " this directory instead"
-        ),
-        required=False,
+        "--output-path",
+        type=Path,
+        help="Output path for unpack/extract/save operations",
     )
-    # Unpack to cwd or output dir
     parser.add_argument(
-        "-u",
-        "--unpack",
-        help=(
-            "Unpack VDF archive to the current working directory or into a directory specified with -o. "
-            "Usage: -u -o (optional)[path]"
-        ),
-        action="store_true",
-        required=False,
+        "-u", "--unpack", action="store_true", help="Unpack the VDF archive"
     )
-    # Extract node by name
     parser.add_argument(
         "-e",
         "--extract",
-        help=(
-            "Extract a file or a directory tree from the VDF archive to the "
-            "provided output path. Usage: -e [file_or_directory_name] -o [path]"
-        ),
         type=str,
-        required=False,
+        help="Extract a file or directory (supports wildcards: *).  Example: -e 'DATA/*.txt'",
     )
-    # Insert file or a directory tree into VFS and save modified VDF
     parser.add_argument(
         "-a",
         "--add",
-        type=tuple[str],
-        help=(
-            "Add a file or a directory with files to the VDF archive. "
-            "Usage: -a [path to input file or directory]"
-            "[path to destination inside VDF] -o (optional)[path to the resulted VDF] "
-            "If not provided, the resulted VDF will be unpacked to the current directory, replacing the original archive"
-        ),
-        required=False,
+        nargs="?",
+        const=None,
+        metavar=("SOURCE", "DESTINATION"),
+        help="Add a file/dir to the archive. If only SOURCE is provided, the filename will be used inside the VDF. Ex: -a myfile.txt DATA/myfile.txt  or -a myfile.txt",
     )
-    # Remove node by name or number of them with wildcards
     parser.add_argument(
         "-r",
         "--remove",
         type=str,
-        help=(
-            "Remove a file or a directory tree or number of them using wildcards "
-            "from the VDF tree. "
-            "Usage: -r [file_or_directory_name] -o (optional)[path_to_the_output_VDF]"
-        ),
-        required=False,
+        help="Remove a file or directory (supports wildcards: *). Example: -r '*.tmp'",
     )
-    # Print out VFS structure tree
     parser.add_argument(
-        "-v",
-        "--view_vfs_tree",
-        action="store_true",
-        help="View the VDF tree",
-        required=False,
+        "-v", "--view-vfs", action="store_true", help="View the VDF file system tree"
     )
-    # Enable debug mode
     parser.add_argument(
-        "-d", "--debug", action="store_true", help="Enable debug mode", required=False
+        "-d", "--debug", action="store_true", help="Enable debug logging"
     )
-    # Enable internal debug mode for ZenKit
     parser.add_argument(
         "-f",
-        "--full_debug",
+        "--full-debug",
         action="store_true",
-        help="Enable full debug mode, with deeper debug messages",
-        required=False,
+        help="Enable full debug logging (ZenKit)",
     )
-
     return parser.parse_args()
 
 
@@ -497,7 +456,7 @@ def main() -> None:
     args = parse_args()
 
     # Validate archive path
-    if not args.archive_path.exists():
+    if not Path(args.archive_path).exists():
         print_colored("red", f"Error: Archive file not found: {args.archive_path}")
         return
 
@@ -524,7 +483,8 @@ def main() -> None:
                 extract_target, args.output_path, all_with_name="*" in args.extract
             )
         elif args.add:
-            source_path, dest_path = args.add
+            source_path = args.add[0]
+            dest_path = args.add[1] if len(args.add) > 1 else None
             if not Path(source_path).exists():
                 print_colored(
                     "red", f"Error: Source file/directory not found: {source_path}"
@@ -550,4 +510,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-#

@@ -36,49 +36,60 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 ### Command-line Arguments
 
 - `archive_path` (required): Path to the VDF archive.
-- `-g1, --gothic1`: Set the game version to Gothic 1.
-- `-o, --output_path`: Specify the output directory for extracted files.
-- `-u, --unpack`: Unpack the entire VDF archive to the specified output directory.
-- `-e, --extract`: Extract a specific file or directory from the VDF.
-- `-a, --add`: Add a file or directory to the VDF.
-- `-r, --remove`: Remove a file or directory from the VDF.
-- `-v, --view_vfs_tree`: Print out the VDF tree structure.
-- `-d, --debug`: Enable debug mode.
-- `-f, --full_debug`: Enable full debug mode for ZenKit.
-- `-t, --time`: Assign a custom creation date for the archive. Format: `%d.%m.%Y% H%:M%:S`
+- `-g, --game-version <g1|g2>`:  Specifies the game version (Gothic 1 or Gothic 2). Defaults to `g2`.
+- `-o, --output-path <path>`: Specifies the output directory for unpack/extract/save operations. Defaults to the current working directory.  If not provided when adding/removing files, the original archive is overwritten if it exists, otherwise a new VDF is created in the current directory.
+- `-u, --unpack`: Unpack the entire VDF archive.
+- `-e, --extract <file_or_directory>`: Extract a specific file or directory (wildcards `*` supported).
+- `-a, --add <source_path> <destination_path>`: Add a file or directory to the VDF.
+- `-r, --remove <file_or_directory>`: Remove a file or directory (wildcards `*` supported).
+- `-v, --view-vfs`: View the VDF file system tree.
+- `-d, --debug`: Enable debug logging.
+- `-f, --full-debug`: Enable full ZenKit debug logging.
+- `-t, --timestamp <DD.MM.YYYY HH:MM:SS>`: Set a custom timestamp for the output VDF.
 
 ### Examples
 
-1. **View VDF Tree Structure**:
-    ```sh
-    python VdfsHandler.py /path/to/archive.vdf -v
-    ```
+**Unpack an archive:**
 
-2. **Extract a File**:
-    ```sh
-    python VdfsHandler.py /path/to/archive.vdf -e filename -o /output/directory
-    ```
-      Wildcards with `*` symbol can be used in the filename argument.
-    Example: `*HUM_HEAD` as filename will extract all files with `HUM_HEAD` in the filename.
+```bash
+python VdfsHandler.py my_archive.vdf -u -o extracted_files
+```
 
-3. **Add a File to the VDF**:
-    ```sh
-    python VdfsHandler.py /path/to/archive.vdf -a /path/to/file internal/path/in/vdf -o /output/directory/for/vdf/with/changes
-    ```
-      Wildcards with `*` symbol can be used instead of the path to the file.
-    Example: `*ZOM` as a path to the file will add all files with `ZOM` in the filename into the archive to the specified internal path.
+**Extract a specific directory:**
 
-4. **Remove a File from the VDF**:
-    ```sh
-    python VdfsHandler.py /path/to/archive.vdf -r filename -o /output/directory
-    ```
-      Wildcards with `*` symbol can be used in the filename argument.
-    Example: `*HUM_BODY` as filename will remove all files with `HUM_BODY` in the filename from the archive.
+```bash
+python VdfsHandler.py my_archive.vdf -e DATA -o extracted_data
+```
 
-5. **Unpack the Entire Archive**:
-    ```sh
-    python VdfsHandler.py /path/to/archive.vdf -u -o /output/directory
-    ```
+**Extract files matching a pattern:**
+
+```bash
+python VdfsHandler.py my_archive.vdf -e '*.mds' -o extracted_mds_files
+```
+
+**Add a file:**
+
+```bash
+python VdfsHandler.py my_archive.vdf -a my_file.txt DATA/MyFile.TXT -o modified_archive.vdf
+```
+
+**Add a directory:**
+
+```bash
+python VdfsHandler.py my_archive.vdf -a my_directory DATA/MyDirectory -o modified_archive.vdf
+```
+
+**Remove a file:**
+
+```bash
+python VdfsHandler.py my_archive.vdf -r MyFile.TXT  -o modified_archive.vdf
+```
+
+**View the VFS:**
+
+```bash
+python VdfsHandler.py my_archive.vdf -v
+```
 
 **Wildcards are case insensitive.**
 
