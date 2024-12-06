@@ -359,7 +359,7 @@ class VdfsHandler:
         else:
             info(f"Succesfully removed {file_name}")
 
-    def save_vdf(self, destination: str | Path) -> None:
+    def save_vdf(self, destination: str | Path, timestamp: int = 0) -> None:
         if not destination:
             if not self.path:
                 destination = Path.cwd() / self.archive_name
@@ -369,7 +369,7 @@ class VdfsHandler:
             destination = Path(destination) / self.archive_name
         try:
             info(f"Saving VDF archive as {destination}...")
-            self.vfs.save(destination, self.game_version)
+            self.vfs.save(destination, self.game_version, timestamp)
         except Exception as err:
             error(f"Failed to save VDF archive due to an unhandled exception: {err}")
         else:
@@ -391,6 +391,14 @@ def parse_args() -> dict:
         "--gothic1",
         action="store_true",
         help="Set game version for packed VDF archives to Gothic 1",
+        required=False,
+    )
+    # Timestamp for the output VDF
+    parser.add_argument(
+        "-t",
+        "--time",
+        type=str,
+        help="Add timestamp to the output VDF archive %d.%m.%Y% H%:M%:S",
         required=False,
     )
     # Input directory for unpacking
@@ -473,6 +481,13 @@ def parse_args() -> dict:
         help="Enable full debug mode, with deeper debug messages",
         required=False,
     )
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="help",
+        help="Show this help message and exit",
+        required=False,
+    )
 
     return vars(parser.parse_args())
 
@@ -489,9 +504,14 @@ def main() -> None:
         )
         exit()
     vfs = VdfsHandler(args["archive_path"])
+    timestamp = 0
 
     if args["gothic1"]:
         vfs.game_version = "g1"
+    if args["time"]:
+        timestamp = int(
+            datetime.strptime(args["time"], "%d.%m.%Y %H:%M:%S").timestamp()
+        )
     if args["view_vfs_tree"]:
         if vfs.is_existing_file:
             vfs.print_vfs()
@@ -532,7 +552,7 @@ def main() -> None:
             exit()
         if not "*" in input_path:
             vfs.insert_file(vdf_path, input_path)
-            vfs.save_vdf(output_path)
+            vfs.save_vdf(output_path, timestamp)
             exit()
         parent_directory, wildcard = input_path.split("*")
         if parent_directory:
@@ -540,7 +560,7 @@ def main() -> None:
                 for file in Path(parent_directory).iterdir():
                     if wildcard.lower() in file.name.lower():
                         vfs.insert_file(vdf_path, file)
-                vfs.save_vdf(output_path)
+                vfs.save_vdf(output_path, timestamp)
                 exit()
             else:
                 print_colored("red", f"Aborting: {parent_directory} was not found.")
@@ -549,7 +569,7 @@ def main() -> None:
             for file in Path().iterdir():
                 if wildcard.lower() in file.name.lower():
                     vfs.insert_file(vdf_path, file)
-            vfs.save_vdf(output_path)
+            vfs.save_vdf(output_path, timestamp)
             exit()
     elif args["remove"]:
         if vfs.is_existing_file:
@@ -557,11 +577,11 @@ def main() -> None:
             output_path = args["output_path"]
             if "*" not in node:
                 vfs.remove_file(node)
-                vfs.save_vdf(output_path)
+                vfs.save_vdf(output_path, timestamp)
                 exit()
             wildcard = node.split("*")[1]
             vfs.remove_file(wildcard, all_with_name=True)
-            vfs.save_vdf(output_path)
+            vfs.save_vdf(output_path, timestamp)
             exit()
         print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
         exit()
