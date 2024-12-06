@@ -1,12 +1,11 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from logging import DEBUG, ERROR, basicConfig, error, info
 from pathlib import Path
 
 from zenkit import GameVersion, LogLevel, Vfs, VfsNode, set_logger_default
 
-from printColored import (enable_ansi_escape_sequences, print_colored,
-                          print_mixed)
+from printColored import enable_ansi_escape_sequences, print_colored, print_mixed
 
 enable_ansi_escape_sequences()
 
@@ -392,7 +391,7 @@ class VdfsHandler:
             error(f"Failed to print VFS due to an unhandled exception: {err}")
 
 
-def parse_args() -> dict:
+def parse_args() -> Namespace:
     parser = ArgumentParser()
     # Game version switch
     parser.add_argument(
@@ -491,105 +490,64 @@ def parse_args() -> dict:
         required=False,
     )
 
-    return vars(parser.parse_args())
+    return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    if (
-        args["archive_path"][-4:]
-        not in [".vdf", ".mod"]
-        # or not Path(args["archive_path"]).exists()
-    ):
-        print_colored(
-            "red", f"Aborting: {args['archive_path']} is not a valid VDF archive."
-        )
-        exit()
-    vfs = VdfsHandler(args["archive_path"])
-    timestamp = 0
 
-    if args["gothic1"]:
-        vfs.game_version = "g1"
-    if args["time"]:
-        timestamp = int(
-            datetime.strptime(args["time"], "%d.%m.%Y %H:%M:%S").timestamp()
-        )
-    if args["view_vfs_tree"]:
-        if vfs.is_existing_file:
-            vfs.print_vfs()
-        else:
-            print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
-    if args["debug"]:
-        vfs._toggle_debugging(args["debug"], False)
-    if args["full_debug"]:
-        vfs._toggle_debugging(args["full_debug"], True)
+    # Validate archive path
+    if not args.archive_path.exists():
+        print_colored("red", f"Error: Archive file not found: {args.archive_path}")
+        return
 
-    if args["unpack"]:
-        if vfs.is_existing_file:
-            vfs.export_all(args["output_path"])
-            exit()
-        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
-        exit()
-    elif args["extract"]:
-        if vfs.is_existing_file:
-            node = args["extract"]
-            path = args["output_path"]
-            if "*" not in node:
-                vfs.export_file(node, path)
-                exit()
-            wildcard = node.split("*")[1]
-            vfs.export_file(wildcard, path, all_with_name=True)
-            exit()
-        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
-        exit()
-    elif args["add"]:
-        if len(args["add"]) == 2:
-            input_path, vdf_path = args["add"]
-        else:
-            input_path = "".join(args["add"])
-            vdf_path = None
-        output_path = args["output_path"]
-        if not input_path:
-            print_colored("red", "Aborting: No input file for insertion was provided.")
-            exit()
-        if not "*" in input_path:
-            vfs.insert_file(vdf_path, input_path)
-            vfs.save_vdf(output_path, timestamp)
-            exit()
-        parent_directory, wildcard = input_path.split("*")
-        if parent_directory:
-            if Path(parent_directory).exists():
-                for file in Path(parent_directory).iterdir():
-                    if wildcard.lower() in file.name.lower():
-                        vfs.insert_file(vdf_path, file)
-                vfs.save_vdf(output_path, timestamp)
-                exit()
-            else:
-                print_colored("red", f"Aborting: {parent_directory} was not found.")
-                exit()
-        else:
-            for file in Path().iterdir():
-                if wildcard.lower() in file.name.lower():
-                    vfs.insert_file(vdf_path, file)
-            vfs.save_vdf(output_path, timestamp)
-            exit()
-    elif args["remove"]:
-        if vfs.is_existing_file:
-            node = args["remove"]
-            output_path = args["output_path"]
-            if "*" not in node:
-                vfs.remove_file(node)
-                vfs.save_vdf(output_path, timestamp)
-                exit()
-            wildcard = node.split("*")[1]
-            vfs.remove_file(wildcard, all_with_name=True)
-            vfs.save_vdf(output_path, timestamp)
-            exit()
-        print_colored("red", f"Aborting: {vfs.archive_name} is empty.")
-        exit()
+    # Validate game version (although zenkit likely handles this internally)
+    try:
+        vfs_handler = VdfsHandler(args.archive_path, args.debug, args.full_debug)
+        vfs_handler.game_version = args.game_version
+    except InvalidGameVersion as e:
+        print_colored("red", f"Error: Invalid game version: {e}")
+        return
 
-    exit()
+    timestamp = int(args.timestamp) if args.timestamp else 0
+
+    try:  # Wrap operations in try-except to catch potential exceptions from VdfsHandler
+        if args.view_vfs:
+            vfs_handler.print_vfs()
+        elif args.unpack:
+            vfs_handler.export_all(args.output_path)
+        elif args.extract:
+            extract_target = (
+                args.extract.split("*")[1] if "*" in args.extract else args.extract
+            )
+            vfs_handler.export_file(
+                extract_target, args.output_path, all_with_name="*" in args.extract
+            )
+        elif args.add:
+            source_path, dest_path = args.add
+            if not Path(source_path).exists():
+                print_colored(
+                    "red", f"Error: Source file/directory not found: {source_path}"
+                )
+                return
+            vfs_handler.insert_file(dest_path, source_path=source_path)
+            vfs_handler.save_vdf(args.output_path, timestamp)
+        elif args.remove:
+            remove_target = (
+                args.remove.split("*")[1] if "*" in args.remove else args.remove
+            )
+            vfs_handler.remove_file(remove_target, all_with_name="*" in args.remove)
+            vfs_handler.save_vdf(args.output_path, timestamp)
+    except (
+        NodeNotFound,
+        InvalidData,
+        FileNotFoundError,
+        Exception,
+    ) as e:  # Catch specific and generic exceptions
+        print_colored("red", f"Error during operation: {e}")
+        return
 
 
 if __name__ == "__main__":
     main()
+#
