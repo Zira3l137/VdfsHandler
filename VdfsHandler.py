@@ -182,7 +182,8 @@ class VdfsHandler:
                     new_tree = {sub_parent_name: sub_children}
                     self._insert_recursive(node_tree=new_tree, parent_node=parent)
                 else:
-                    parent.create(Path(child).name, Path(child).read_bytes())
+                    if not self.vfs.find(Path(child).name):
+                        parent.create(Path(child).name, Path(child).read_bytes())
 
     def _insert_dir(
         self, internal_path: str | Path, parent: VfsNode | None = None
@@ -267,9 +268,13 @@ class VdfsHandler:
                     "Nor the source path or content for the file was provided"
                 )
             if not len(Path(internal_path).parts) > 1:
+                if found := self.vfs.find(internal_path.upper()):
+                    return found
                 result = self.vfs.root.create(internal_path.upper(), content)
                 return result
             internal_parent = self._insert_dir(Path(internal_path).parent)
+            if found := self.vfs.find(Path(internal_path).name.upper()):
+                return found
             result = internal_parent.create(Path(internal_path).name.upper(), content)
             return result
         info(f"Inserting from {source_path}...")
@@ -281,11 +286,15 @@ class VdfsHandler:
             self._insert_recursive(source_path, parent_node=internal_parent)
             return
         if not internal_path or internal_path in [".", "\\", "/", ".\\", "./"]:
+            if found := self.vfs.find(Path(source_path).name.upper()):
+                return found
             result = self.vfs.root.create(
                 Path(source_path).name.upper(), Path(source_path).read_bytes()
             )
             return result
         internal_parent = self._insert_dir(internal_path)
+        if found := self.vfs.find(Path(source_path).name.upper()):
+            return found
         result = internal_parent.create(
             Path(source_path).name.upper(), Path(source_path).read_bytes()
         )
