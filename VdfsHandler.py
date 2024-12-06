@@ -481,13 +481,6 @@ def parse_args() -> dict:
         help="Enable full debug mode, with deeper debug messages",
         required=False,
     )
-    parser.add_argument(
-        "-h",
-        "--help",
-        action="help",
-        help="Show this help message and exit",
-        required=False,
-    )
 
     return vars(parser.parse_args())
 
