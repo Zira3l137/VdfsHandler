@@ -28,7 +28,7 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 
 2. Install the required dependencies:
     ```sh
-    pip install zenkit
+    pip install -r requirements.txt
     ```
 
 ## Usage
