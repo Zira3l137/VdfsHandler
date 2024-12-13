@@ -1,17 +1,17 @@
 # VdfsHandler
 
-VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Files) archives, primarily used in the Gothic game series. It allows you to view, extract, add, and remove files from VDF archives, as well as create new archives.
+VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Files) archives, primarily used in the Gothic game series. It allows you to view, extract, add, and remove files from VDF archives, as well as create new archives. This version represents a complete rewrite of the original `VdfsHandler.py` functionality, now split into `Vdf.py` (core VDF manipulation) and `Cli.py` (command-line interface).
 
 ## Features
 
 - **View VDF structure**: Print the tree structure of the VDF archive.
-- **Extract files**: Extract specific files or directories from the VDF archive.
-- **Add files**: Insert new files or directories into the VDF archive.
-- **Remove files**: Delete specific files or directories from the VDF archive.
-- **Save changes**: Save the modified VDF archive to a specified location.
-
-![image](https://github.com/user-attachments/assets/7a3c4276-d9a5-4815-a26c-9e0ec8308f30)
-
+- **Extract files**: Extract specific files or directories from the VDF archive, with wildcard support.
+- **Add files**: Insert new files or directories into the VDF archive, with wildcard support.
+- **Remove files**: Delete specific files or directories from the VDF archive, with wildcard support.
+- **Create new archives**: Generate new VDF archives.
+- **Unpack archives**: Extract all files from a VDF archive into a directory structure.
+- **Set game version**: Specify the game version (Gothic 1 or Gothic 2) for compatibility.
+- **Set timestamp**: Set the creation date of the VDF archive.
 
 ## Requirements
 
@@ -33,74 +33,95 @@ VdfsHandler is a CLI utility written in Python for managing VDF (Virtual Disk Fi
 
 ## Usage
 
-### Command-line Arguments
 
-- `archive_path` (required): Path to the VDF archive.
-- `-g, --game-version <g1|g2>`:  Specifies the game version (Gothic 1 or Gothic 2). Defaults to `g2`.
-- `-o, --output-path <path>`: Specifies the output directory for unpack/extract/save operations. Defaults to the current working directory.  If not provided when adding/removing files, the original archive is overwritten if it exists, otherwise a new VDF is created in the current directory.
-- `-u, --unpack`: Unpack the entire VDF archive.
-- `-e, --extract <file_or_directory>`: Extract a specific file or directory (wildcards `*` supported).
-- `-a, --add <source_path> <destination_path>`: Add a file or directory to the VDF.
-- `-r, --remove <file_or_directory>`: Remove a file or directory (wildcards `*` supported).
-- `-v, --view-vfs`: View the VDF file system tree.
-- `-d, --debug`: Enable debug logging.
-- `-f, --full-debug`: Enable full ZenKit debug logging.
-- `-t, --timestamp <DD.MM.YYYY HH:MM:SS>`: Set a custom timestamp for the output VDF.
+The command-line interface is now managed through `Cli.py`.  Here are the available options:
+
+```
+usage: cli.py [-h] [-i PATH_TO_VDF] [-n PATH_TO_NEW_VDF] [-o OUTPUT_PATH]
+              [-gv INT 0 or 1] [-t %d.%m.%Y %H:%M:%S]
+              [-e PATH_TO_ASSET_INSIDE_VDF] [-u] [-r PATH_TO_ASSET_INSIDE_VDF]
+              [-a [PATH_TO_LOCAL_FILE_OR_DIRECTORY PATH_TO_ASSET_IN_VDF ...]]
+              [-l] [-d]
+
+options:
+  -h, --help            show this help message and exit
+  -i PATH_TO_VDF, --input PATH_TO_VDF
+                        The path to the VDF archive
+  -n PATH_TO_NEW_VDF, --new PATH_TO_NEW_VDF
+                        The path to the new VDF archive that will be created
+  -o OUTPUT_PATH, --output OUTPUT_PATH
+                        The output path to save asset from VDF or VDF archive
+                        itself
+  -gv INT 0 or 1, --game-version INT 0 or 1
+                        The game version of the saved VDF file, 0 for Gothic 1
+                        and 1 for Gothic 2
+  -t %d.%m.%Y %H:%M:%S, --timestamp %d.%m.%Y %H:%M:%S
+                        The creation date of the VDF file in the format
+                        %d.%m.%Y %H:%M:%S
+  -e PATH_TO_ASSET_INSIDE_VDF, --extract PATH_TO_ASSET_INSIDE_VDF
+                        The path to the asset to extract from VDF archive, used
+                        with --output, wildcards are supported.Example:
+                        `textures/ui/hud/healthbar_*`
+  -u, --unpack         The path to the archive to unpack, used with --output
+  -r PATH_TO_ASSET_INSIDE_VDF, --remove PATH_TO_ASSET_INSIDE_VDF
+                        The name of the asset to remove from VDF archive,
+                        wildcards are supported. Example:
+                        `path/to/assets/in/vdf/OLDMINE_*`
+  -a [PATH_TO_LOCAL_FILE_OR_DIRECTORY PATH_TO_ASSET_IN_VDF ...], --add [PATH_TO_LOCAL_FILE_OR_DIRECTORY PATH_TO_ASSET_IN_VDF ...]
+                        The path to the asset to add to VDF archive and its
+                        paht inside VDF archive, used with --output, wildcards
+                        are supported. Example:
+                        `path/to/local/files/*.tga`
+  -l, --list           List all assets in the VDF archive
+  -d, --debug          Display debug information
+```
 
 ### Examples
 
-**Unpack an archive:**
+
+**Create a new VDF:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -u -o extracted_files
+python Cli.py -n my_new_archive.vdf -o /path/to/output/
 ```
 
-**Extract a specific directory:**
+**Create a new VDF and add files to it in one go:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -e DATA -o extracted_data
+python Cli.py -n my_new_archive.vdf -a "path/to/local/files/*.mrm" meshes/ -o new_archive.vdf
 ```
 
-**Extract files matching a pattern:**
+**Add files to an existing VDF:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -e '*.mds' -o extracted_mds_files
+python Cli.py -i my_archive.vdf -a "path/to/local/files/*.tga" textures/ -o updated_archive.vdf
 ```
 
-**Add a file:**
+**Extract files with wildcards:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -a my_file.txt DATA/MyFile.TXT -o modified_archive.vdf
+python Cli.py -i my_archive.vdf -e "textures/*.tex" -o extracted_textures/
 ```
 
-**Add a directory:**
+**Remove files with wildcards:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -a my_directory DATA/MyDirectory -o modified_archive.vdf
+python Cli.py -i my_archive.vdf -r "old_assets/ADDON_*" -o cleaned_archive.vdf
 ```
 
-**Remove a file:**
+**Unpack a VDF:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -r MyFile.TXT  -o modified_archive.vdf
+python Cli.py -i my_archive.vdf -u -o unpacked_archive/
 ```
 
-**View the VFS:**
+**List contents of a VDF:**
 
 ```bash
-python VdfsHandler.py my_archive.vdf -v
+python Cli.py -i my_archive.vdf -l
 ```
 
-**Wildcards are case insensitive.**
 
-### Debugging
-
-To enable debugging, use the `-d` or `-debug` flag. For more detailed internal debugging related to the ZenKit library, use the `-f` or `-full_debug` flag.
-
-```sh
-python VdfsHandler.py /path/to/archive.vdf -d
-python VdfsHandler.py /path/to/archive.vdf -f
-```
 
 ## License
 
