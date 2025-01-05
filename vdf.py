@@ -93,12 +93,11 @@ class Vdf:
         self._cache = []
 
     def __len__(self) -> int:
-        def __traverse_tree(current: VfsNode) -> int:
-            count = 0
+        def __traverse_tree(current: VfsNode, count: int = 0) -> int:
             for child in current:
                 if child.is_dir():
                     count += 1
-                    __traverse_tree(child)
+                    __traverse_tree(child, count)
                 else:
                     count += 1
             return count
