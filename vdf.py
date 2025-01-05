@@ -95,11 +95,9 @@ class Vdf:
     def __len__(self) -> int:
         def __traverse_tree(current: VfsNode, count: int = 0) -> int:
             for child in current:
+                count += 1
                 if child.is_dir():
-                    count += 1
                     __traverse_tree(child, count)
-                else:
-                    count += 1
             return count
 
         return __traverse_tree(self._vfs.root)
