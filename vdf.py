@@ -33,7 +33,7 @@ class VdfLoadError(Exception):
 
 class VdfParseError(Exception):
     """
-    Exception raised if an error occurs during VDF loading.
+    Exception raised if an error occurs during VDF node tree parsing.
     """
 
     def __init__(self, message: str) -> None:
@@ -42,7 +42,7 @@ class VdfParseError(Exception):
 
 class VdfCreateNodeError(Exception):
     """
-    Exception raised if an error occurs during VDF loading.
+    Exception raised if an error occurs during creation of a new node in VDF tree.
     """
 
     def __init__(self, message: str) -> None:
