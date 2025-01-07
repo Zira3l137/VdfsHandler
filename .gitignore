@@ -3,5 +3,4 @@ Scripts/
 __pycache__/
 pyvenv.cfg
 share/
-push.bat
-pull.bat
+*.bat
